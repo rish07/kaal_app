@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "472009989760",
+    "project_id": "kaal-789ff",
+    "storage_bucket": "kaal-789ff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:472009989760:android:f787547011c1f2cdf45065",
+        "android_client_info": {
+          "package_name": "com.example.kaal_bot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "472009989760-4darnpajq9drp2e39f0sf5cgunatvls3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kaal_bot",
+            "certificate_hash": "8e914609674563206512d2192de3959a98f15e51"
+          }
+        },
+        {
+          "client_id": "472009989760-a4hlngauaft3dae7kc34l7qlj4fihnum.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYYZeNHuRgREzmqCr47pevKpMCjdoyLBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "472009989760-a4hlngauaft3dae7kc34l7qlj4fihnum.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
