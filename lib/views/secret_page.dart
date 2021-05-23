@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kaal_bot/constants.dart';
@@ -18,7 +19,7 @@ class _SecretPageState extends State<SecretPage> {
   bool _isCopied = false;
   String secretCode = "";
 
-  Future<String> getSecretCode() async {
+  Future<void> getSecretCode() async {
     CollectionReference users = FirebaseFirestore.instance.collection('users');
     users
         .where("userName", isEqualTo: widget.user.displayName)
@@ -32,8 +33,8 @@ class _SecretPageState extends State<SecretPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+
     getSecretCode();
   }
 
@@ -109,10 +110,12 @@ class _SecretPageState extends State<SecretPage> {
                         Icons.copy,
                         color: Colors.white,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() {
                           _isCopied = true;
                         });
+                        ClipboardData data = ClipboardData(text: secretCode);
+                        await Clipboard.setData(data);
                         Fluttertoast.showToast(msg: 'Copied to clipboard!');
                       },
                     ),
@@ -150,28 +153,72 @@ class _SecretPageState extends State<SecretPage> {
                       showDialog(
                           context: context,
                           builder: (context) {
-                            return Container(
-                              width: 342,
-                              height: 233,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(8),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: Color.fromRGBO(
-                                          0, 0, 0, 0.550000011920929),
-                                      offset: Offset(0, 19),
-                                      blurRadius: 25)
-                                ],
-                                color: Color.fromRGBO(
-                                    31, 34, 40, 0.6000000238418579),
+                            return AlertDialog(
+                              contentPadding: EdgeInsets.only(
+                                top: 24,
                               ),
-                              child: Column(
-                                children: <Widget>[
-                                  Text(
-                                    'Sync Error',
-                                  )
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              title: Text("Sync Error"),
+                              content: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: 24,
+                                      left: 24.0,
+                                      bottom: 40,
+                                    ),
+                                    child: Text(
+                                      "You haven’t initialized the “Secret Code in your CLI”. Please do that before you can continue",
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.all(8),
+                                          child: Center(
+                                            child: Text(
+                                              "Show me how",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.white),
+                                            ),
+                                            color: violetColor,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          padding: EdgeInsets.all(8),
+                                          child: Center(
+                                            child: Text(
+                                              "Okay, I'll do it",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              top: BorderSide(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ],
                               ),
                             );
