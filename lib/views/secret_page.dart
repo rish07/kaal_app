@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kaal_bot/constants.dart';
+import 'package:kaal_bot/widgets/action_button.dart';
+import 'package:kaal_bot/widgets/sync_error_dialog.dart';
 
 class SecretPage extends StatefulWidget {
   final GoogleSignInAccount user;
@@ -141,109 +143,20 @@ class _SecretPageState extends State<SecretPage> {
               SizedBox(
                 height: size.height * 0.02,
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.27),
-                child: MaterialButton(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9)),
-                  color: violetColor,
-                  onPressed: () {
-                    if (_isCopied) {
-                    } else {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              contentPadding: EdgeInsets.only(
-                                top: 24,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              title: Text("Sync Error"),
-                              content: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: 24,
-                                      left: 24.0,
-                                      bottom: 40,
-                                    ),
-                                    child: Text(
-                                      "You haven’t initialized the “Secret Code in your CLI”. Please do that before you can continue",
-                                    ),
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                          padding: EdgeInsets.all(8),
-                                          child: Center(
-                                            child: Text(
-                                              "Show me how",
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              top: BorderSide(
-                                                  color: Colors.white),
-                                            ),
-                                            color: violetColor,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          padding: EdgeInsets.all(8),
-                                          child: Center(
-                                            child: Text(
-                                              "Okay, I'll do it",
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border(
-                                              top: BorderSide(
-                                                  color: Colors.white),
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            );
-                          });
-                    }
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Continue",
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_right,
-                          color: Colors.white,
-                        )
-                      ],
-                    ),
-                  ),
-                ),
+              ActionButton(
+                title: "Continue",
+                size: size,
+                isCopied: _isCopied,
+                onTap: () {
+                  if (_isCopied) {
+                  } else {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return SyncErrorDialog();
+                        });
+                  }
+                },
               )
             ],
           ),
