@@ -90,7 +90,7 @@ class _SecretPageState extends State<SecretPage> {
                 height: size.height * 0.3,
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(
                     padding: EdgeInsets.all(16),
