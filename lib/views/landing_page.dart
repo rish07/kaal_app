@@ -1,7 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kaal_bot/google_sign_in.dart';
+import 'package:kaal_bot/views/secret_page.dart';
+import 'package:page_transition/page_transition.dart';
 
 class LandingPage extends StatefulWidget {
   @override
@@ -67,7 +70,14 @@ class _LandingPageState extends State<LandingPage> {
                   padding: EdgeInsets.all(12),
                   color: Color(0xff2A2D36),
                   onPressed: () async {
-                    await signInWithGoogle();
+                    GoogleSignInAccount user = await signInWithGoogle();
+                    Navigator.push(
+                      context,
+                      PageTransition(
+                        child: SecretPage(user: user),
+                        type: PageTransitionType.rightToLeft,
+                      ),
+                    );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

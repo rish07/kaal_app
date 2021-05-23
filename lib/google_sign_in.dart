@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-Future<UserCredential> signInWithGoogle() async {
+Future<GoogleSignInAccount> signInWithGoogle() async {
   // Trigger the authentication flow
   final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
 
@@ -16,6 +17,34 @@ Future<UserCredential> signInWithGoogle() async {
     idToken: googleAuth.idToken,
   );
 
+  if (await checkUser(currentUser: googleUser)) {
+    await addUser(
+      name: googleUser.displayName,
+      email: googleUser.email,
+    );
+  }
+  await FirebaseAuth.instance.signInWithCredential(credential);
   // Once signed in, return the UserCredential
-  return await FirebaseAuth.instance.signInWithCredential(credential);
+  return googleUser;
+}
+
+Future<bool> checkUser({GoogleSignInAccount currentUser}) async {
+  CollectionReference users = FirebaseFirestore.instance.collection('users');
+  QuerySnapshot temp =
+      await users.where("userName", isEqualTo: currentUser.displayName).get();
+  if (temp.docs.length == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+Future<void> addUser({String name, String email}) {
+  // Call the user's CollectionReference to add a new user
+  CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+  return users
+      .add({'userName': name, 'userEmail': email})
+      .then((value) => print("User Added"))
+      .catchError((error) => print("Failed to add user: $error"));
 }
