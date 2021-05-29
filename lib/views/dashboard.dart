@@ -1,277 +1,323 @@
-import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kaal_bot/constants.dart';
+import 'package:kaal_bot/views/landing_page.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 class Dashboard extends StatefulWidget {
+  final String userid;
+  const Dashboard({Key key, @required this.userid}) : super(key: key);
   @override
   _DashboardState createState() => _DashboardState();
 }
 
 class _DashboardState extends State<Dashboard> {
   bool isShowingMainData;
+  Stream<QuerySnapshot> _dataStream;
+  double totalWork = 0;
 
   @override
   void initState() {
     super.initState();
     isShowingMainData = true;
+    setState(
+      () {
+        _dataStream = FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.userid)
+            .collection('activity')
+            .orderBy(
+              "timestamp",
+              descending: true,
+            )
+            .snapshots();
+      },
+    );
+  }
+
+  DateTime currentBackPressTime;
+
+  Future<bool> onWillPop() {
+    DateTime now = DateTime.now();
+    if (currentBackPressTime == null ||
+        now.difference(currentBackPressTime) > Duration(seconds: 2)) {
+      currentBackPressTime = now;
+      Fluttertoast.showToast(
+          msg: "Press again to exit the app",
+          backgroundColor: Colors.white,
+          textColor: Colors.black);
+      return Future.value(false);
+    }
+    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+    return Future.value(true);
   }
 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              height: size.height,
-              width: size.width,
-              child: Image.asset(
-                "assets/home_bg.png",
-                fit: BoxFit.cover,
+    return WillPopScope(
+      onWillPop: onWillPop,
+      child: Scaffold(
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Container(
+                height: size.height,
+                width: size.width,
+                child: Image.asset(
+                  "assets/home_bg.png",
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 32),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Hey there, Risky!",
-                        style: TextStyle(
-                          fontSize: 32,
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 30.0, horizontal: 32),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: size.height * 0.06,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Hey there, ${signedInUser.displayName.split(" ")[0]}!",
+                          style: TextStyle(
+                            fontSize: 32,
+                          ),
                         ),
-                      ),
-                      Image.asset("assets/avatar.png"),
-                    ],
-                  ),
-                  SizedBox(
-                    height: size.height * 0.15,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        "Total hours of work:",
-                        style: TextStyle(
-                          fontSize: 20,
-                        ),
-                      ),
-                      Text(
-                        "36 Hrs",
-                        style: TextStyle(
-                          fontSize: 28,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: size.height * 0.1,
-                  ),
-                  AspectRatio(
-                    aspectRatio: 1.23,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(18)),
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xff2c274c),
-                            Color(0xff46426c),
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: <Widget>[
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.only(right: 16.0, left: 6.0),
-                              child: LineChart(
-                                sampleData2(),
-                                swapAnimationDuration:
-                                    const Duration(milliseconds: 250),
+                        PopupMenuButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          onSelected: (value) async {
+                            print("logout");
+                            await FirebaseAuth.instance.signOut();
+                            await GoogleSignIn().signOut();
+                            Navigator.push(
+                              context,
+                              PageTransition(
+                                  child: LandingPage(),
+                                  type: PageTransitionType.rightToLeft),
+                            );
+                          },
+                          itemBuilder: (context) => <PopupMenuEntry<String>>[
+                            PopupMenuItem(
+                              value: "Logout",
+                              child: Text(
+                                'Logout',
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
+                          ],
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              signedInUser.photoUrl,
+                              height: 40,
+                              width: 40,
+                            ),
                           ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  )
-                ],
+                    SizedBox(
+                      height: size.height * 0.04,
+                    ),
+                    StreamBuilder(
+                      stream: _dataStream,
+                      builder: (BuildContext context,
+                          AsyncSnapshot<QuerySnapshot> snapshots) {
+                        if (snapshots.hasError) {
+                          return Text('Something went wrong');
+                        }
+                        if (snapshots.connectionState ==
+                            ConnectionState.waiting) {
+                          return Text('Loading...');
+                        }
+                        if (snapshots.data.docs.length != 0) {
+                          var activity = snapshots.data.docs[0].get('data');
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    "Total time: ",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${(activity.values.toList().fold(0, (p, c) => p + c)).toStringAsFixed(2)} Secs",
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: size.height * 0.05,
+                              ),
+                              AspectRatio(
+                                aspectRatio: 1.23,
+                                child: Container(
+                                  decoration: const BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(18)),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xff202020),
+                                        Color(0xff474747),
+                                      ],
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 12, right: 16.0, left: 6.0),
+                                          child: Center(
+                                            child: Container(
+                                              child: SfCartesianChart(
+                                                // Initialize category axis
+                                                primaryYAxis: CategoryAxis(
+                                                    title: AxisTitle(
+                                                        text: 'Secs',
+                                                        textStyle: TextStyle(
+                                                            fontFamily:
+                                                                'Roboto',
+                                                            fontSize: 12,
+                                                            fontStyle: FontStyle
+                                                                .italic,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w300))),
+                                                primaryXAxis: CategoryAxis(),
+                                                series: <
+                                                    LineSeries<ActivityData,
+                                                        String>>[
+                                                  LineSeries<ActivityData,
+                                                      String>(
+                                                    // Bind data source
+                                                    dataSource: List<
+                                                            ActivityData>.generate(
+                                                        activity.length,
+                                                        (int index) {
+                                                      return ActivityData(
+                                                          activity.keys
+                                                              .toList()[index],
+                                                          double.parse(activity
+                                                              .values
+                                                              .toList()[index]
+                                                              .toString()));
+                                                    }),
+                                                    xValueMapper:
+                                                        (ActivityData sales,
+                                                                _) =>
+                                                            sales.tool,
+                                                    yValueMapper:
+                                                        (ActivityData sales,
+                                                                _) =>
+                                                            sales.time,
+                                                    dataLabelSettings:
+                                                        DataLabelSettings(
+                                                            isVisible: true),
+                                                    yAxisName: "Secs",
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(
+                                        height: 10,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: size.height * 0.03,
+                              ),
+                              Text(
+                                "Today's Breakdown",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 20,
+                              ),
+                              Container(
+                                height: size.height * 0.21,
+                                child: ListView.separated(
+                                  separatorBuilder:
+                                      (BuildContext context, int index) =>
+                                          Divider(
+                                    color: Colors.white,
+                                  ),
+                                  itemCount: activity.length,
+                                  itemBuilder: (context, index) {
+                                    return Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 5,
+                                        horizontal: 3,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(activity.keys.toList()[index]),
+                                          Text(
+                                              "${activity.values.toList()[index].toString()} Secs"),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            ],
+                          );
+                        }
+                        return Container(
+                          child: Center(
+                            child: Text(
+                              "No Data",
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  LineChartData sampleData2() {
-    return LineChartData(
-      lineTouchData: LineTouchData(
-        enabled: false,
-      ),
-      gridData: FlGridData(
-        show: false,
-      ),
-      titlesData: FlTitlesData(
-        bottomTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 22,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff72719b),
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-          margin: 10,
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 1:
-                return "MON";
-              case 3:
-                return "TUE";
-              case 5:
-                return "WED";
-              case 7:
-                return "THU";
-              case 9:
-                return "FRI";
-              case 11:
-                return "SAT";
-              case 13:
-                return "SUN";
-            }
-            return '';
-          },
-        ),
-        leftTitles: SideTitles(
-          showTitles: true,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff75729e),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 1:
-                return '2';
-              case 2:
-                return '4';
-              case 3:
-                return '6';
-              case 4:
-                return '8';
-              case 5:
-                return '10';
-            }
-            return '';
-          },
-          margin: 8,
-          reservedSize: 30,
-        ),
-      ),
-      borderData: FlBorderData(
-          show: true,
-          border: const Border(
-            bottom: BorderSide(
-              color: Color(0xff4e4965),
-              width: 4,
-            ),
-            left: BorderSide(
-              color: Colors.transparent,
-            ),
-            right: BorderSide(
-              color: Colors.transparent,
-            ),
-            top: BorderSide(
-              color: Colors.transparent,
-            ),
-          )),
-      minX: 0,
-      maxX: 14,
-      maxY: 6,
-      minY: 0,
-      lineBarsData: linesBarData2(),
-    );
-  }
-
-  List<LineChartBarData> linesBarData2() {
-    return [
-      // LineChartBarData(
-      //   spots: [
-      //     FlSpot(1, 1),
-      //     FlSpot(3, 4),
-      //     FlSpot(5, 1.8),
-      //     FlSpot(7, 5),
-      //     FlSpot(10, 2),
-      //     FlSpot(12, 2.2),
-      //     FlSpot(13, 1.8),
-      //   ],
-      //   isCurved: true,
-      //   curveSmoothness: 0,
-      //   colors: const [
-      //     Color(0x444af699),
-      //   ],
-      //   barWidth: 4,
-      //   isStrokeCapRound: true,
-      //   dotData: FlDotData(
-      //     show: false,
-      //   ),
-      //   belowBarData: BarAreaData(
-      //     show: false,
-      //   ),
-      // ),
-      LineChartBarData(
-        spots: [
-          FlSpot(1, 1),
-          FlSpot(3, 2.8),
-          FlSpot(7, 1.2),
-          FlSpot(10, 2.8),
-          FlSpot(12, 2.6),
-          FlSpot(13, 3.9),
-        ],
-        isCurved: true,
-        colors: const [
-          Color(0x99aa4cfc),
-        ],
-        barWidth: 4,
-        isStrokeCapRound: true,
-        dotData: FlDotData(
-          show: false,
-        ),
-        belowBarData: BarAreaData(show: true, colors: [
-          const Color(0x33aa4cfc),
-        ]),
-      ),
-      // LineChartBarData(
-      //   spots: [
-      //     FlSpot(1, 3.8),
-      //     FlSpot(3, 1.9),
-      //     FlSpot(6, 5),
-      //     FlSpot(10, 3.3),
-      //     FlSpot(13, 4.5),
-      //   ],
-      //   isCurved: true,
-      //   curveSmoothness: 0,
-      //   colors: const [
-      //     Color(0x4427b6fc),
-      //   ],
-      //   barWidth: 2,
-      //   isStrokeCapRound: true,
-      //   dotData: FlDotData(show: true),
-      //   belowBarData: BarAreaData(
-      //     show: false,
-      //   ),
-      // ),
-    ];
-  }
+class ActivityData {
+  ActivityData(this.tool, this.time);
+  final String tool;
+  final double time;
 }

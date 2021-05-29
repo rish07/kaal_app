@@ -21,6 +21,7 @@ Future<GoogleSignInAccount> signInWithGoogle() async {
     await addUser(
       name: googleUser.displayName,
       email: googleUser.email,
+      photoUrl: googleUser.photoUrl,
     );
   }
   await FirebaseAuth.instance.signInWithCredential(credential);
@@ -39,12 +40,18 @@ Future<bool> checkUser({GoogleSignInAccount currentUser}) async {
   }
 }
 
-Future<void> addUser({String name, String email}) {
+Future<void> addUser({String name, String email, String photoUrl}) {
   // Call the user's CollectionReference to add a new user
   CollectionReference users = FirebaseFirestore.instance.collection('users');
 
   return users
-      .add({'userName': name, 'userEmail': email})
+      .add(
+        {
+          'userName': name,
+          'userEmail': email,
+          'photoUrl': photoUrl,
+        },
+      )
       .then((value) => print("User Added"))
       .catchError((error) => print("Failed to add user: $error"));
 }

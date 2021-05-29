@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kaal_bot/constants.dart';
 import 'package:kaal_bot/views/dashboard.dart';
 import 'package:kaal_bot/widgets/action_button.dart';
 import 'package:kaal_bot/widgets/instruction.dart';
@@ -16,16 +17,11 @@ class _OnboardindWinState extends State<OnboardindWin> {
   final PageController _controller = PageController();
   final _currentPageNotifier = ValueNotifier<int>(0);
   _buildCircleIndicator() {
-    return Positioned(
-      left: 0.0,
-      right: 0.0,
-      bottom: 0.0,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: CirclePageIndicator(
-          itemCount: 3,
-          currentPageNotifier: _currentPageNotifier,
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: CirclePageIndicator(
+        itemCount: 3,
+        currentPageNotifier: _currentPageNotifier,
       ),
     );
   }
@@ -89,7 +85,9 @@ class _OnboardindWinState extends State<OnboardindWin> {
                     Navigator.push(
                       context,
                       PageTransition(
-                          child: Dashboard(),
+                          child: Dashboard(
+                            userid: loggedSecretCode,
+                          ),
                           type: PageTransitionType.rightToLeft),
                     );
                   }

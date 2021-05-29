@@ -24,8 +24,7 @@ class _OnBoardingOSState extends State<OnBoardingOS> {
             fit: BoxFit.cover,
           ),
         ),
-        Positioned(
-          top: size.height * 0.44,
+        Center(
           child: Row(
             children: [
               GestureDetector(
@@ -36,7 +35,7 @@ class _OnBoardingOSState extends State<OnBoardingOS> {
                 ),
                 child: Container(
                   height: 200,
-                  width: 200,
+                  width: 150,
                   child: Text(""),
                 ),
               ),
@@ -48,7 +47,7 @@ class _OnBoardingOSState extends State<OnBoardingOS> {
                 ),
                 child: Container(
                   height: 200,
-                  width: 200,
+                  width: 150,
                   child: Text(""),
                 ),
               ),

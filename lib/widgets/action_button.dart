@@ -8,11 +8,9 @@ class ActionButton extends StatelessWidget {
     bool isCopied,
     this.onTap,
     this.title,
-  })  : _isCopied = isCopied,
-        super(key: key);
+  }) : super(key: key);
 
   final Size size;
-  final bool _isCopied;
   final Function onTap;
   final String title;
 
