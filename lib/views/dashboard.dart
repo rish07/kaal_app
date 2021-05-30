@@ -5,9 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kaal_bot/constants.dart';
-import 'package:kaal_bot/views/landing_page.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+
+import 'landing_page.dart';
 
 class Dashboard extends StatefulWidget {
   final String userid;
@@ -17,14 +18,16 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  bool isShowingMainData;
   Stream<QuerySnapshot> _dataStream;
   double totalWork = 0;
+  CollectionReference adminRef =
+      FirebaseFirestore.instance.collection('admins');
+  List admins;
+  DocumentSnapshot temp;
 
   @override
   void initState() {
     super.initState();
-    isShowingMainData = true;
     setState(
       () {
         _dataStream = FirebaseFirestore.instance
@@ -38,23 +41,35 @@ class _DashboardState extends State<Dashboard> {
             .snapshots();
       },
     );
+    getAdmins();
   }
 
   DateTime currentBackPressTime;
 
+  Future getAdmins() async {
+    temp = await adminRef.doc("lagdb30M5OEANHQZrHsn").get();
+    setState(() {
+      admins = temp.get("admins");
+    });
+  }
+
   Future<bool> onWillPop() {
-    DateTime now = DateTime.now();
-    if (currentBackPressTime == null ||
-        now.difference(currentBackPressTime) > Duration(seconds: 2)) {
-      currentBackPressTime = now;
-      Fluttertoast.showToast(
-          msg: "Press again to exit the app",
-          backgroundColor: Colors.white,
-          textColor: Colors.black);
-      return Future.value(false);
+    if (admins.contains(signedInUser.email)) {
+      return Future.value(true);
+    } else {
+      DateTime now = DateTime.now();
+      if (currentBackPressTime == null ||
+          now.difference(currentBackPressTime) > Duration(seconds: 2)) {
+        currentBackPressTime = now;
+        Fluttertoast.showToast(
+            msg: "Press again to exit the app",
+            backgroundColor: Colors.white,
+            textColor: Colors.black);
+        return Future.value(false);
+      }
+      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+      return Future.value(true);
     }
-    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-    return Future.value(true);
   }
 
   @override
@@ -197,17 +212,17 @@ class _DashboardState extends State<Dashboard> {
                                               child: SfCartesianChart(
                                                 // Initialize category axis
                                                 primaryYAxis: CategoryAxis(
-                                                    title: AxisTitle(
-                                                        text: 'Secs',
-                                                        textStyle: TextStyle(
-                                                            fontFamily:
-                                                                'Roboto',
-                                                            fontSize: 12,
-                                                            fontStyle: FontStyle
-                                                                .italic,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w300))),
+                                                  title: AxisTitle(
+                                                    text: 'Secs',
+                                                    textStyle: TextStyle(
+                                                        fontFamily: 'Roboto',
+                                                        fontSize: 12,
+                                                        fontStyle:
+                                                            FontStyle.italic,
+                                                        fontWeight:
+                                                            FontWeight.w300),
+                                                  ),
+                                                ),
                                                 primaryXAxis: CategoryAxis(),
                                                 series: <
                                                     LineSeries<ActivityData,
@@ -225,8 +240,8 @@ class _DashboardState extends State<Dashboard> {
                                                           double.parse(activity
                                                               .values
                                                               .toList()[index]
-                                                              .toString()));
-                                                    }),
+                                                              .toString(),),);
+                                                    },),
                                                     xValueMapper:
                                                         (ActivityData sales,
                                                                 _) =>

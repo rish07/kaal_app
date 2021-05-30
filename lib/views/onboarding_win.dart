@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kaal_bot/constants.dart';
-import 'package:kaal_bot/views/dashboard.dart';
+import 'package:kaal_bot/views/secret_page.dart';
 import 'package:kaal_bot/widgets/action_button.dart';
 import 'package:kaal_bot/widgets/instruction.dart';
 import 'package:page_transition/page_transition.dart';
@@ -49,7 +48,9 @@ class _OnboardindWinState extends State<OnboardindWin> {
                 width: size.width,
                 child: PageView(
                   onPageChanged: (int index) {
-                    _currentPageNotifier.value = index;
+                    setState(() {
+                      _currentPageNotifier.value = index;
+                    });
                   },
                   controller: _controller,
                   children: [
@@ -75,9 +76,10 @@ class _OnboardindWinState extends State<OnboardindWin> {
               SizedBox(height: size.height * 0.1),
               ActionButton(
                 size: size,
-                title: 'Next Step',
+                title: _currentPageNotifier.value == 2 ? 'Finish' : 'Next Step',
                 onTap: () {
                   if (_currentPageNotifier.value < 2) {
+                    print(_currentPageNotifier.value);
                     _controller.animateToPage(_currentPageNotifier.value + 1,
                         duration: Duration(milliseconds: 300),
                         curve: Curves.easeIn);
@@ -85,9 +87,7 @@ class _OnboardindWinState extends State<OnboardindWin> {
                     Navigator.push(
                       context,
                       PageTransition(
-                          child: Dashboard(
-                            userid: loggedSecretCode,
-                          ),
+                          child: SecretPage(),
                           type: PageTransitionType.rightToLeft),
                     );
                   }

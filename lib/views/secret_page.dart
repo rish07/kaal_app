@@ -1,16 +1,16 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
 import 'package:kaal_bot/constants.dart';
 import 'package:kaal_bot/views/dashboard.dart';
 import 'package:kaal_bot/views/onboarding_os.dart';
 import 'package:kaal_bot/widgets/action_button.dart';
 import 'package:kaal_bot/widgets/sync_error_dialog.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:sendgrid_mailer/sendgrid_mailer.dart' as sg;
-import 'package:sendgrid_mailer/sendgrid_mailer.dart';
 
 class SecretPage extends StatefulWidget {
   const SecretPage({Key key}) : super(key: key);
@@ -22,24 +22,35 @@ class _SecretPageState extends State<SecretPage> {
   String secretCode = "";
   Stream<QuerySnapshot> _userStream;
 
-  void sendMail(String text, String from) {
-    final mailer = sg.Mailer(
-        "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");
+  Future sendMail() async {
+    var headers = {
+      'Content-Type': 'application/json',
+      'Authorization':
+          'Basic OGUwMWYxMWY3YTJlNGY0MWZlOGU4NDFhY2IwZGUzNDI6OTVkOTA4OTU2YWE5MzYyNzFhNDVjZGNmNmM4MDQzNWY='
+    };
+    var request =
+        http.Request('POST', Uri.parse('https://api.mailjet.com/v3.1/send'));
+    request.body = json.encode({
+      "Messages": [
+        {
+          "From": {"Email": "kavishrupesh@gmail.com", "Name": "Kaal"},
+          "To": [
+            {"Email": signedInUser.email, "Name": signedInUser.displayName}
+          ],
+          "Subject": "Welcome to Kaal Bot",
+          "TextPart": "Here's your secret code: $secretCode"
+        }
+      ]
+    });
+    request.headers.addAll(headers);
 
-    List<sg.Address> toAddress = [Address(signedInUser.email)];
-    final fromAddress = Address('$from');
-    List<sg.Content> content = [Content('text/plain', '$text')];
-    final subject = 'Hello from Kaal-Bot!';
-    final personalization = Personalization(toAddress);
+    http.StreamedResponse response = await request.send();
 
-    final email =
-        Email([personalization], fromAddress, subject, content: content);
-
-    mailer.send(email).then((result) => {
-          print(
-            result.toString(),
-          ),
-        });
+    if (response.statusCode == 200) {
+      print(await response.stream.bytesToString());
+    } else {
+      print(response.reasonPhrase);
+    }
   }
 
   @override
@@ -167,10 +178,10 @@ class _SecretPageState extends State<SecretPage> {
                                     color: Colors.white,
                                   ),
                                   onPressed: () async {
-                                    sendMail("Your secret code: $secretCode",
-                                        "tradecircleapp@gmail.com");
-
-                                    Fluttertoast.showToast(msg: 'Email Sent!');
+                                    await sendMail().then((value) {
+                                      Fluttertoast.showToast(
+                                          msg: 'Email Sent!');
+                                    });
                                   },
                                 ),
                               ),
