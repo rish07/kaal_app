@@ -39,8 +39,10 @@ dependencies:
   cupertino_icons: ^1.0.0
   page_view_indicators: ^2.0.0
   syncfusion_flutter_charts: ^19.1.65
+  google_sign_in_mocks: ^0.2.1
 
 dev_dependencies:
+  test: any
   flutter_test:
     sdk: flutter
 
